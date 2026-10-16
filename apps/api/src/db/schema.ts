@@ -12,13 +12,13 @@ export const usersTable = pgTable("users", {
 
 export const jobsTable = pgTable("jobs", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  title: varchar({ length: 255 }).notNull(),
-  description: varchar({ length: 255 }).notNull(),
+  name: varchar({ length: 255 }).notNull(),
   status: varchar({ length: 50 }).notNull(),
   userId: integer("user_id")
     .notNull()
     .references(() => usersTable.id),
   created_at: timestamp("created_at").defaultNow(),
+  jobId: varchar('job_id', { length: 255 }),
   type: varchar({ enum: ['bulk', 'single'] }),
   metadata: json()
 });

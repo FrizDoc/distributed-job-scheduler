@@ -5,54 +5,125 @@ import { jobsTable } from "../db/schema";
 import db from "../db";
 
 
+
+
+type JobInfo = {
+  persistentJobId: string | number;
+  queueJobId: string;
+  queueName: "email" | "notification";
+};
+
 export const addJob = async (req: Request, res: Response) => {
   try {
-    const { jobData } = res.locals.validated.body;
+    const jobData = res.locals.validated.body;
+    const userId = (req as Request & { user: { id: number } }).user.id;
 
-    console.log(res.locals.validated)
-    console.log(jobData?.type)
-    switch (jobData?.type) {
-      case "email":
-        const saveEmailJob = await db.insert(jobsTable).values({
-          title: jobData.title,
-          description: jobData.description,
-          status: "pending",
-          userId: jobData.userId,
-          metadata: jobData
-        }).returning({ id: jobData.id });
-        await emailQueue.add("sendEmail", jobData.payload);
+    let jobInfo: JobInfo;
+
+    switch (jobData.type) {
+      case "email": {
+        const queueJob = await emailQueue.add(
+          "sendEmail",
+          jobData.payload,
+        );
+
+        if (queueJob.id == null) {
+          throw new Error("BullMQ did not return an email job ID");
+        }
+
+        const [savedJob] = await db
+          .insert(jobsTable)
+          .values({
+            name: jobData.name,
+            status: "pending",
+            userId,
+            jobId: queueJob.id,
+            metadata: jobData,
+          })
+          .returning({ id: jobsTable.id });
+
+        if (!savedJob) {
+          throw new Error("Failed to persist email job");
+        }
+
+        jobInfo = {
+          persistentJobId: savedJob.id,
+          queueJobId: queueJob.id,
+          queueName: "email",
+        };
+
         break;
-      case "notification":
-        const saveNotificaitonJob = await db.insert(jobsTable).values({
-          title: jobData.title,
-          description: jobData.description,
-          status: "pending",
-          userId: jobData.userId,
-          metadata: jobData
-        }).returning({ id: jobsTable.id });
-        await notificationQueue.add("sendNotification", jobData.payload);
+      }
+
+      case "notification": {
+        const queueJob = await notificationQueue.add(
+          "sendNotification",
+          jobData.payload,
+        );
+
+        if (queueJob.id == null) {
+          throw new Error("BullMQ did not return a notification job ID");
+        }
+
+        const [savedJob] = await db
+          .insert(jobsTable)
+          .values({
+            name: jobData.name,
+            status: "pending",
+            userId,
+            jobId: queueJob.id,
+            metadata: jobData,
+          })
+          .returning({ id: jobsTable.id });
+
+        if (!savedJob) {
+          throw new Error("Failed to persist notification job");
+        }
+
+        jobInfo = {
+          persistentJobId: savedJob.id,
+          queueJobId: queueJob.id,
+          queueName: "notification",
+        };
+
         break;
+      }
+
       default:
-        return res.status(400).json({ error: "Invalid job type" });
+        return res.status(400).json({
+          error: "Invalid job type",
+        });
     }
-    res.status(201).json({ message: "Job added successfully!", jobData });
+
+    return res.status(201).json({
+      message: "Job added successfully",
+      jobInfo,
+    });
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ error: "Failed to add job" });
+    console.error("Failed to add job:", error);
+
+    return res.status(500).json({
+      error: "Failed to add job",
+    });
   }
 };
 
 
+
 export const getJobById = async (req: Request, res: Response) => {
   try {
-    const { jobId, queueName } = req.params;
-    // emailQueue.getJob(jobId).then((job) => {
-    //   if (!job) {
-    //     return res.status(404).json({ error: "Job not found" });
-    //   }
-    //   res.status(200).json({ job });
-    // }
+    const { jobId, queueName } = res.locals.validated.params;
+    console.log(jobId, queueName)
+    switch (queueName) {
+      case "emails":
+        const jobDetails = await emailQueue.getJob(jobId)
+        res.status(200).json(jobDetails)
+      case "notifications":
+        const notificationDetail = await notificationQueue.getJob(jobId)
 
+
+
+    }
 
 
     // res.status(200).json({ job });

@@ -15,7 +15,7 @@ export const validate =
     for (const key of ["params", "query", "body"] as const) {
       const schema = schemas[key];
       if (!schema) continue;
-                                                                                    
+
       const result = schema.safeParse(req[key]);
       if (!result.success) {
         return res.status(400).json({
