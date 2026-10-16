@@ -1,7 +1,23 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@middleware/*": [
+        "./src/middleware/*"
+      ],
+      "@controller/*": [
+        "./src/controller/*"
+      ],
+      "@routes/*": [
+        "./src/routes/*"
+      ],
+    }
   },
-  "include": ["server.ts", "src/**/*.ts"]
+  "include": [
+    "server.ts",
+    "src/**/*.ts"
+  ]
 }

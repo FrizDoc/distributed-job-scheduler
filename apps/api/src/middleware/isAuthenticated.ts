@@ -2,19 +2,20 @@ import JWT from 'jsonwebtoken';
 
 
 
-const isAuthenticated = (req: any, res: any, next: any) => {
-  const authHEader = req.headers.authorization;
-  if (!authHEader) {
+export const isAuthenticated = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  console.log(authHeader)
+  if (!authHeader) {
     return res.status(401).json({ message: 'Authorization header missing' });
   }
 
-  const token = authHEader.split(' ')[1];
+  const token = authHeader.split(' ')[1];
   if (!token) {
     return res.status(401).json({ message: 'Token missing' });
   }
 
   try {
-    const decoded = JWT.verify(token, process.env.JWT_SECRET as string);
+    const decoded = JWT.verify(token, process.env.JWT_ACCESS_TOKEN_SECRET as string);
     req.user = decoded;
     next();
   } catch (error) {

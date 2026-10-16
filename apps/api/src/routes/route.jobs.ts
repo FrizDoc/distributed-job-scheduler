@@ -4,8 +4,9 @@ import {
   getJobById,
   getJobs,
   updateJob,
-} from "../controller/jobs.controller";
-import { validate } from "../middleware/validate";
+} from "@controller/jobs.controller";
+import { validate } from "@middleware/validate";
+import { isAuthenticated } from "@middleware/isAuthenticated";
 import {
   createJobSchema,
   jobIdParamsSchema,
@@ -15,20 +16,20 @@ import {
 
 const jobRouter = express.Router();
 
-jobRouter.get("/jobs", validate({ query: listJobsQuerySchema }), getJobs);
-jobRouter.post("/jobs", validate({ body: createJobSchema }), addJob);
+jobRouter.get("/", isAuthenticated, validate({ query: listJobsQuerySchema }), getJobs);
+jobRouter.post("", isAuthenticated, validate({ body: createJobSchema }), addJob);
 jobRouter.get(
-  "/jobs/:jobId",
+  "/:jobId", isAuthenticated,
   validate({ params: jobIdParamsSchema }),
   getJobById,
 );
 jobRouter.patch(
-  "/jobs/:jobId",
+  "/:jobId", isAuthenticated,
   validate({ params: jobIdParamsSchema, body: updateJobSchema }),
   updateJob,
 );
 
-jobRouter.post("/add", (req: Request, res: Response) => {
+jobRouter.post("/add", isAuthenticated, (req: Request, res: Response) => {
   res.status(201).json({ message: "Job added successfully!" });
 });
 

@@ -11,7 +11,7 @@ const app: Express = express();
 app.use(rateLimiter); // Apply rate limiting middleware to all routes
 app.use(express.json());
 
-app.use("/api/", jobRouter);
+app.use("/api/jobs", jobRouter);
 app.use("/api/auth", authRouter);
 
 app.get("/", (req: Request, res: Response) => {

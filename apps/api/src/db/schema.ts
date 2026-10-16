@@ -1,6 +1,6 @@
 import { Relation } from "drizzle-orm";
 import { relations } from "drizzle-orm/_relations";
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, json, timestamp, PgEnum } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -18,6 +18,9 @@ export const jobsTable = pgTable("jobs", {
   userId: integer("user_id")
     .notNull()
     .references(() => usersTable.id),
+  created_at: timestamp("created_at").defaultNow(),
+  type: varchar({ enum: ['bulk', 'single'] }),
+  metadata: json()
 });
 
 export const usersRelations = relations(usersTable, ({ many }) => ({
