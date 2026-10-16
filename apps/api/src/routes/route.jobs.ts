@@ -9,6 +9,7 @@ import { validate } from "@middleware/validate";
 import { isAuthenticated } from "@middleware/isAuthenticated";
 import {
   createJobSchema,
+  getJobByIdQuerySchema,
   jobIdParamsSchema,
   listJobsQuerySchema,
   updateJobSchema,
@@ -20,7 +21,7 @@ jobRouter.get("/", isAuthenticated, validate({ query: listJobsQuerySchema }), ge
 jobRouter.post("", isAuthenticated, validate({ body: createJobSchema }), addJob);
 jobRouter.get(
   "/:jobId", isAuthenticated,
-  validate({ params: jobIdParamsSchema }),
+  validate({ params: jobIdParamsSchema, query: getJobByIdQuerySchema }),
   getJobById,
 );
 jobRouter.patch(
