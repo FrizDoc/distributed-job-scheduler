@@ -3,6 +3,7 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { emailQueue, notificationQueue } from "../config/queue/queue";
 import { jobsTable } from "../db/schema";
 import db from "../db";
+import { email } from "zod";
 
 
 
@@ -172,13 +173,85 @@ export const getJobs = async (req: Request, res: Response) => {
 
 export const updateJob = async (req: Request, res: Response) => {
   try {
-    const { jobId } = req.params;
-    const { jobData } = req.body;
+    const data = res.locals.validated.body;
+    const userId = (req as Request & {
+      user: { id: number };
+    }).user.id;
 
-    res
-      .status(200)
-      .json({ message: "Job updated successfully!", jobId, jobData });
+    switch (data.queuename) {
+      case "emails": {
+        const [emailJobDetails] = await db
+          .select({
+            id: jobsTable.id,
+            metadata: jobsTable.metadata,
+            jobId: jobsTable.jobId,
+          })
+          .from(jobsTable)
+          .where(
+            and(
+              eq(jobsTable.jobId, data.jobId),
+              eq(jobsTable.userId, userId),
+            ),
+          )
+          .limit(1);
+
+        // Verify ownership before accessing the queue.
+        if (!emailJobDetails) {
+          return res.status(404).json({
+            message: "Job not found",
+          });
+        }
+
+        const emailJob = await emailQueue.getJob(data.jobId);
+
+        if (!emailJob || emailJob.id !== emailJobDetails.jobId) {
+          return res.status(404).json({
+            message: "Job not found",
+          });
+        }
+
+        // Update the BullMQ job data.
+        await emailJob.updateData(data.payload);
+
+        // Update metadata without discarding existing properties.
+        const existingMetadata =
+          typeof emailJobDetails.metadata === "object" &&
+            emailJobDetails.metadata !== null &&
+            !Array.isArray(emailJobDetails.metadata)
+            ? emailJobDetails.metadata
+            : {};
+
+        const metadata = {
+          ...existingMetadata,
+          payload: data.payload,
+        };
+
+        await db
+          .update(jobsTable)
+          .set({ metadata })
+          .where(
+            and(
+              eq(jobsTable.id, emailJobDetails.id),
+              eq(jobsTable.userId, userId),
+            ),
+          );
+
+        return res.status(200).json({
+          message: "Job updated successfully",
+        });
+      }
+
+      default:
+        return res.status(400).json({
+          message: "Unsupported queue name",
+        });
+    }
   } catch (error) {
-    res.status(500).json({ error: "Failed to update job" });
+    // Replace with your application's structured logger.
+    console.error("Failed to update job:", error);
+
+    return res.status(500).json({
+      message: "Failed to update job",
+    });
   }
 };
