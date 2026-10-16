@@ -1,0 +1,16 @@
+{
+  "name": "@scheduler/db",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "drizzle-orm": "^1.0.0-rc.4",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^1.0.0-rc.4"
+  }
+}
