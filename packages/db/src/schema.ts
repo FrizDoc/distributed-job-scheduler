@@ -18,6 +18,8 @@ export const jobsTable = pgTable("jobs", {
     .notNull()
     .references(() => usersTable.id),
   created_at: timestamp("created_at").defaultNow(),
+  started_at: timestamp("started_at"),
+  completed_at: timestamp("completed_at"),
   jobId: varchar("job_id", { length: 255 }),
   type: varchar({ enum: ["bulk", "single"] }),
   metadata: json(),
