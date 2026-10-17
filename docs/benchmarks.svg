@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="660" viewBox="0 0 1200 660" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="Benchmark results: indexing experiment and worker scaling">
+<rect x="0.5" y="0.5" width="1199" height="659" rx="12" fill="#fcfcfb" stroke="#e4e2dc"/>
+<text x="40.0" y="54.0" font-size="26" fill="#0b0b0b" font-weight="600" text-anchor="start" >Benchmark results</text>
+<text x="40.0" y="80.0" font-size="14" fill="#52514e" font-weight="400" text-anchor="start" >k6 load tests · API, workers, Postgres 17 and Redis 7 in Docker Compose on one laptop (Intel i7-1185G7, 4 cores / 8 threads)</text>
+<text x="40.0" y="150" fill="#0b0b0b" font-size="38" font-weight="500">536<tspan font-size="18" fill="#52514e" dx="6">req/s</tspan></text>
+<text x="40.0" y="172.0" font-size="13" fill="#52514e" font-weight="400" text-anchor="start" >peak API throughput, 0% errors</text>
+<line x1="304.0" x2="304.0" y1="112" y2="170" stroke="#e4e2dc"/>
+<text x="320.0" y="150" fill="#0b0b0b" font-size="38" font-weight="500">23<tspan font-size="18" fill="#52514e" dx="6">ms</tspan></text>
+<text x="320.0" y="172.0" font-size="13" fill="#52514e" font-weight="400" text-anchor="start" >end-to-end p50 at 250 jobs/s</text>
+<line x1="584.0" x2="584.0" y1="112" y2="170" stroke="#e4e2dc"/>
+<text x="600.0" y="150" fill="#0b0b0b" font-size="38" font-weight="500">3.96×<tspan font-size="18" fill="#52514e" dx="6"></tspan></text>
+<text x="600.0" y="172.0" font-size="13" fill="#52514e" font-weight="400" text-anchor="start" >worker throughput, 1 → 4 replicas</text>
+<line x1="864.0" x2="864.0" y1="112" y2="170" stroke="#e4e2dc"/>
+<text x="880.0" y="150" fill="#0b0b0b" font-size="38" font-weight="500">0<tspan font-size="18" fill="#52514e" dx="6"></tspan></text>
+<text x="880.0" y="172.0" font-size="13" fill="#52514e" font-weight="400" text-anchor="start" >jobs lost out of 82,400</text>
+<text x="40.0" y="222.0" font-size="17" fill="#0b0b0b" font-weight="600" text-anchor="start" >Indexing experiment</text>
+<text x="40.0" y="244.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="start" >Same 250 jobs/s load for 60 s against the baseline schema and with jobs.job_id indexed. Log scale.</text>
+<rect x="40" y="260" width="12" height="12" rx="3" fill="#9e9c94"/>
+<text x="58.0" y="270.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="start" >Baseline (no index)</text>
+<rect x="190" y="260" width="12" height="12" rx="3" fill="#2a78d6"/>
+<text x="208.0" y="270.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="start" >job_id indexed</text>
+<line x1="160.0" x2="160.0" y1="292" y2="580" stroke="#ecebe6"/>
+<text x="160.0" y="598.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >1 ms</text>
+<line x1="235.2" x2="235.2" y1="292" y2="580" stroke="#ecebe6"/>
+<text x="235.2" y="598.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >10 ms</text>
+<line x1="310.4" x2="310.4" y1="292" y2="580" stroke="#ecebe6"/>
+<text x="310.4" y="598.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >100 ms</text>
+<line x1="385.6" x2="385.6" y1="292" y2="580" stroke="#ecebe6"/>
+<text x="385.6" y="598.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >1 s</text>
+<line x1="460.8" x2="460.8" y1="292" y2="580" stroke="#ecebe6"/>
+<text x="460.8" y="598.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >10 s</text>
+<line x1="536.0" x2="536.0" y1="292" y2="580" stroke="#ecebe6"/>
+<text x="536.0" y="598.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >100 s</text>
+<text x="148.0" y="332.0" font-size="13" fill="#0b0b0b" font-weight="500" text-anchor="end" >End-to-end p50</text>
+<rect x="160" y="310.0" width="332.5" height="16" rx="4" fill="#9e9c94"/>
+<text x="498.5" y="322.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >26.4 s</text>
+<rect x="160" y="330.0" width="102.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="268.0" y="342.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >22.7 ms</text>
+<text x="148.0" y="404.0" font-size="13" fill="#0b0b0b" font-weight="500" text-anchor="end" >End-to-end p95</text>
+<rect x="160" y="382.0" width="340.0" height="16" rx="4" fill="#9e9c94"/>
+<text x="506.0" y="394.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >33.2 s</text>
+<rect x="160" y="402.0" width="130.2" height="16" rx="4" fill="#2a78d6"/>
+<text x="296.2" y="414.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >53.8 ms</text>
+<text x="148.0" y="476.0" font-size="13" fill="#0b0b0b" font-weight="500" text-anchor="end" >Queue wait p50</text>
+<rect x="160" y="454.0" width="301.0" height="16" rx="4" fill="#9e9c94"/>
+<text x="467.0" y="466.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >10.1 s</text>
+<rect x="160" y="474.0" width="91.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="257.0" y="486.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >16.2 ms</text>
+<text x="148.0" y="548.0" font-size="13" fill="#0b0b0b" font-weight="500" text-anchor="end" >API latency p95</text>
+<rect x="160" y="526.0" width="172.8" height="16" rx="4" fill="#9e9c94"/>
+<text x="338.8" y="538.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >198.7 ms</text>
+<rect x="160" y="546.0" width="123.0" height="16" rx="4" fill="#2a78d6"/>
+<text x="289.0" y="558.0" font-size="12" fill="#52514e" font-weight="400" text-anchor="start" >43.2 ms</text>
+<text x="660.0" y="222.0" font-size="17" fill="#0b0b0b" font-weight="600" text-anchor="start" >Worker scaling</text>
+<text x="660.0" y="244.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="start" >Burst of 3,000 email jobs, 100 ms simulated send, 5 concurrent jobs per replica.</text>
+<rect x="660" y="260" width="12" height="12" rx="3" fill="#2a78d6"/>
+<text x="678.0" y="270.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="start" >Measured</text>
+<line x1="756" x2="776" y1="266" y2="266" stroke="#52514e" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="782.0" y="270.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="start" >Perfectly linear</text>
+<line x1="700" x2="1160" y1="580.0" y2="580.0" stroke="#c9c7c0"/>
+<text x="692.0" y="584.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="end" >0</text>
+<line x1="700" x2="1160" y1="526.4" y2="526.4" stroke="#ecebe6"/>
+<text x="692.0" y="530.4" font-size="12" fill="#7a7873" font-weight="400" text-anchor="end" >50</text>
+<line x1="700" x2="1160" y1="472.8" y2="472.8" stroke="#ecebe6"/>
+<text x="692.0" y="476.8" font-size="12" fill="#7a7873" font-weight="400" text-anchor="end" >100</text>
+<line x1="700" x2="1160" y1="419.2" y2="419.2" stroke="#ecebe6"/>
+<text x="692.0" y="423.2" font-size="12" fill="#7a7873" font-weight="400" text-anchor="end" >150</text>
+<line x1="700" x2="1160" y1="365.6" y2="365.6" stroke="#ecebe6"/>
+<text x="692.0" y="369.6" font-size="12" fill="#7a7873" font-weight="400" text-anchor="end" >200</text>
+<line x1="700" x2="1160" y1="312.0" y2="312.0" stroke="#ecebe6"/>
+<text x="692.0" y="316.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="end" >250</text>
+<rect x="754.7" y="527.0" width="44" height="53.0" rx="4" fill="#2a78d6"/>
+<line x1="744.7" x2="808.7" y1="527.0" y2="527.0" stroke="#52514e" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="776.7" y="517.0" font-size="13" fill="#0b0b0b" font-weight="600" text-anchor="middle" >49.4 jobs/s</text>
+<text x="776.7" y="598.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="middle" >1 replica</text>
+<text x="776.7" y="616.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >p50 23.0 s</text>
+<rect x="908.0" y="474.5" width="44" height="105.5" rx="4" fill="#2a78d6"/>
+<line x1="898.0" x2="962.0" y1="474.1" y2="474.1" stroke="#52514e" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="930.0" y="464.1" font-size="13" fill="#0b0b0b" font-weight="600" text-anchor="middle" >98.4 jobs/s</text>
+<text x="930.0" y="598.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="middle" >2 replicas</text>
+<text x="930.0" y="616.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >p50 7.8 s</text>
+<rect x="1061.3" y="370.5" width="44" height="209.5" rx="4" fill="#2a78d6"/>
+<line x1="1051.3" x2="1115.3" y1="368.2" y2="368.2" stroke="#52514e" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="1083.3" y="358.2" font-size="13" fill="#0b0b0b" font-weight="600" text-anchor="middle" >195.4 jobs/s</text>
+<text x="1083.3" y="598.0" font-size="12.5" fill="#52514e" font-weight="400" text-anchor="middle" >4 replicas</text>
+<text x="1083.3" y="616.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="middle" >p50 235.3 ms</text>
+<text x="40.0" y="636.0" font-size="12" fill="#7a7873" font-weight="400" text-anchor="start" >Single run per test; email sending is stubbed (only the scaling test adds a simulated provider delay). Measured 2026-10-17.</text>
+</svg>
