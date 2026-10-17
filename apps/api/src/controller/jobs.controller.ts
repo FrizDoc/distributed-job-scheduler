@@ -14,7 +14,10 @@ const EDITABLE_STATES = ["waiting", "delayed", "prioritized", "paused"];
 const PRIORITY_RANK: Record<JobPriority, number> = { high: 1, medium: 2, low: 3 };
 
 // metadata is the validated create body, read back from json (so runAt is a string there)
-type JobMetadata = Pick<CreateJobInput, "payload" | "priority" | "attempts" | "backoff" | "timeoutMs"> & {
+type JobMetadata = Pick<
+  CreateJobInput,
+  "payload" | "priority" | "attempts" | "backoff" | "timeoutMs"
+> & {
   type?: string;
   repeat?: CreateJobInput["repeat"];
 };
