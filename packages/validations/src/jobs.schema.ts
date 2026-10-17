@@ -37,10 +37,7 @@ export const repeatSchema = z.union([
     pattern: z
       .string()
       .trim()
-      .regex(
-        /^(\S+\s+){4,5}\S+$/,
-        "pattern must be a 5 or 6 field cron expression",
-      ),
+      .regex(/^(\S+\s+){4,5}\S+$/, "pattern must be a 5 or 6 field cron expression"),
     tz: z.string().optional(),
     limit: z.int().positive().optional(),
   }),
@@ -61,10 +58,7 @@ const jobFields = {
     .trim()
     .min(3)
     .max(20)
-    .regex(
-      /^[a-zA-Z0-9_-]+$/,
-      "queue may only contain letters, numbers, '-' and '_'",
-    ),
+    .regex(/^[a-zA-Z0-9_-]+$/, "queue may only contain letters, numbers, '-' and '_'"),
   payload: z.record(z.string(), z.unknown()),
   runAt: futureDate.optional(),
   type: z.enum(["email", "notification"]),
@@ -79,8 +73,7 @@ const jobFields = {
     .optional(),
 };
 
-const runAtXorRepeat = (job: { runAt?: Date; repeat?: unknown }) =>
-  !(job.runAt && job.repeat);
+const runAtXorRepeat = (job: { runAt?: Date; repeat?: unknown }) => !(job.runAt && job.repeat);
 const runAtXorRepeatError = {
   message: "Provide either runAt or repeat, not both",
   path: ["repeat"],
@@ -89,7 +82,6 @@ const runAtXorRepeatError = {
 // /jobs/:jobId
 export const jobIdParamsSchema = z.object({
   jobId: z.coerce.number().int().positive(),
-
 });
 
 // GET /jobs/:jobId
@@ -98,9 +90,7 @@ export const getJobByIdQuerySchema = z.object({
 });
 
 // POST /jobs
-export const createJobSchema = z
-  .object(jobFields)
-  .refine(runAtXorRepeat, runAtXorRepeatError);
+export const createJobSchema = z.object(jobFields).refine(runAtXorRepeat, runAtXorRepeatError);
 
 // PATCH /jobs/:jobId
 export const updateJobSchema = z
@@ -112,7 +102,7 @@ export const updateJobSchema = z
   .strict()
   .refine((body) => Object.keys(body).length > 0, {
     message: "At least one field must be provided",
-  })
+  });
 
 export const listJobsQuerySchema = z.object({
   status: jobStatusSchema.optional(),

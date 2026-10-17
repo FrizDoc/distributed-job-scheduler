@@ -18,7 +18,6 @@ app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "Welcome to the API!" });
 });
 
-
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   // unique violation
   if (err?.cause?.code === "23505") {

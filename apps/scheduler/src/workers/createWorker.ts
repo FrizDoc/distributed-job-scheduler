@@ -32,11 +32,7 @@ const syncStatus = (job: Job, status: JobStatus) => {
 
 export const flushStatusWrites = () => Promise.all(pendingWrites.values());
 
-export const createWorker = ({
-  queueName,
-  processor,
-  concurrency,
-}: CreateWorkerOptions) => {
+export const createWorker = ({ queueName, processor, concurrency }: CreateWorkerOptions) => {
   const worker = new Worker(queueName, processor, {
     connection: {
       ...getRedisConnectionOptions(),
@@ -66,8 +62,7 @@ export const createWorker = ({
     }
 
     const attempts = job.opts.attempts || 1;
-    const willRetry =
-      job.attemptsMade < attempts && error.name !== "UnrecoverableError";
+    const willRetry = job.attemptsMade < attempts && error.name !== "UnrecoverableError";
 
     console.error(
       `[${queueName}] Job ${job.id} failed (attempt ${job.attemptsMade}/${attempts}):`,

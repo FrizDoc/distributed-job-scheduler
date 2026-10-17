@@ -45,10 +45,7 @@ export const addJob = async (req: Request, res: Response) => {
     // bullmq doesn't allow purely numeric custom ids
     const queueJobId = `job-${savedJob.id}`;
 
-    await db
-      .update(jobsTable)
-      .set({ jobId: queueJobId })
-      .where(eq(jobsTable.id, savedJob.id));
+    await db.update(jobsTable).set({ jobId: queueJobId }).where(eq(jobsTable.id, savedJob.id));
 
     try {
       await target.queue.add(target.jobName, jobData.payload, {
@@ -162,8 +159,8 @@ export const updateJob = async (req: Request, res: Response) => {
 
     const existingMetadata =
       typeof record.metadata === "object" &&
-        record.metadata !== null &&
-        !Array.isArray(record.metadata)
+      record.metadata !== null &&
+      !Array.isArray(record.metadata)
         ? (record.metadata as Record<string, unknown>)
         : {};
 

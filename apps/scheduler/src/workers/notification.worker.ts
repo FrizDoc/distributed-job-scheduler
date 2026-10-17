@@ -17,8 +17,5 @@ export const createNotificationWorker = () =>
   createWorker({
     queueName: QUEUE_NAMES.PUSH_NOTIFICATIONS,
     processor: processNotificationJob,
-    concurrency: parseInt(
-      process.env.NOTIFICATION_WORKER_CONCURRENCY || "10",
-      10,
-    ),
+    concurrency: parseInt(process.env.NOTIFICATION_WORKER_CONCURRENCY || "10", 10),
   });

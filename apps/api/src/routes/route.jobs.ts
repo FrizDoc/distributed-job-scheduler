@@ -1,10 +1,5 @@
 import express, { Request, Response } from "express";
-import {
-  addJob,
-  getJobById,
-  getJobs,
-  updateJob,
-} from "@controller/jobs.controller";
+import { addJob, getJobById, getJobs, updateJob } from "@controller/jobs.controller";
 import { validate } from "@middleware/validate";
 import { isAuthenticated } from "@middleware/isAuthenticated";
 import {
@@ -20,12 +15,14 @@ const jobRouter = express.Router();
 jobRouter.get("/", isAuthenticated, validate({ query: listJobsQuerySchema }), getJobs);
 jobRouter.post("", isAuthenticated, validate({ body: createJobSchema }), addJob);
 jobRouter.get(
-  "/:jobId", isAuthenticated,
+  "/:jobId",
+  isAuthenticated,
   validate({ params: jobIdParamsSchema, query: getJobByIdQuerySchema }),
   getJobById,
 );
 jobRouter.patch(
-  "/:jobId", isAuthenticated,
+  "/:jobId",
+  isAuthenticated,
   validate({ params: jobIdParamsSchema, body: updateJobSchema }),
   updateJob,
 );

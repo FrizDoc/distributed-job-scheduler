@@ -53,7 +53,6 @@ export const loginUser = async (req: Request, res: Response) => {
     .where(eq(usersTable.email, email))
     .limit(1);
 
-
   if (!user || !(await bcrypt.compare(password, user.hashedPassword))) {
     return res.status(401).json({ message: "Invalid credentials!" });
   }
@@ -63,12 +62,12 @@ export const loginUser = async (req: Request, res: Response) => {
   const accessToken = JWT.sign(
     { id: user.id, email: user.email },
     process.env.JWT_ACCESS_TOKEN_SECRET as string,
-    { expiresIn: "1h" }
+    { expiresIn: "1h" },
   );
   const refreshToken = JWT.sign(
     { id: user.id, email: user.email },
     process.env.JWT_REFRESH_TOKEN_SECRET as string,
-    { expiresIn: "7d" }
+    { expiresIn: "7d" },
   );
 
   return res.status(200).json({

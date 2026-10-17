@@ -18,9 +18,9 @@ export const jobsTable = pgTable("jobs", {
     .notNull()
     .references(() => usersTable.id),
   created_at: timestamp("created_at").defaultNow(),
-  jobId: varchar('job_id', { length: 255 }),
-  type: varchar({ enum: ['bulk', 'single'] }),
-  metadata: json()
+  jobId: varchar("job_id", { length: 255 }),
+  type: varchar({ enum: ["bulk", "single"] }),
+  metadata: json(),
 });
 
 export const usersRelations = relations(usersTable, ({ many }) => ({

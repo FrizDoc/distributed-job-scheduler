@@ -1,5 +1,11 @@
 {
-  "watch": ["src", "../../packages/redis/src", "../../packages/db/src", "../../packages/validations/src", ".env"],
+  "watch": [
+    "src",
+    "../../packages/redis/src",
+    "../../packages/db/src",
+    "../../packages/validations/src",
+    ".env"
+  ],
   "ext": "ts,json",
   "ignore": ["node_modules", "dist"],
   "exec": "tsx src/app.ts",

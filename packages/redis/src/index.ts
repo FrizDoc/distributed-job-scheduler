@@ -26,10 +26,7 @@ export const getRedisConnectionOptions = (): RedisConnectionOptions => ({
   },
 });
 
-export const createRedisConnection = (
-  name: string,
-  overrides: RedisOptions = {},
-): Redis => {
+export const createRedisConnection = (name: string, overrides: RedisOptions = {}): Redis => {
   const client = new Redis({ ...getRedisConnectionOptions(), ...overrides });
 
   client.on("connect", () => {
