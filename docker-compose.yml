@@ -1,0 +1,109 @@
+name: distributed-task-scheduler
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://${POSTGRES_USER:-scheduler}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-scheduler}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-scheduler}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set}
+      POSTGRES_DB: ${POSTGRES_DB:-scheduler}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    volumes:
+      - redis-data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      target: migrate
+    environment:
+      <<: *app-env
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      target: api
+    restart: unless-stopped
+    init: true
+    environment:
+      <<: *app-env
+      PORT: 3000
+      JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET:?JWT_ACCESS_TOKEN_SECRET is not set}
+      JWT_REFRESH_TOKEN_SECRET: ${JWT_REFRESH_TOKEN_SECRET:?JWT_REFRESH_TOKEN_SECRET is not set}
+      COMPLETED_JOB_RETENTION_SECONDS: ${COMPLETED_JOB_RETENTION_SECONDS:-3600}
+      FAILED_JOB_RETENTION_SECONDS: ${FAILED_JOB_RETENTION_SECONDS:-604800}
+    ports:
+      - "${API_PORT:-3000}:3000"
+    networks:
+      - backend
+      - public
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  scheduler:
+    build:
+      context: .
+      target: scheduler
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    environment:
+      <<: *app-env
+      EMAIL_WORKER_CONCURRENCY: ${EMAIL_WORKER_CONCURRENCY:-5}
+      NOTIFICATION_WORKER_CONCURRENCY: ${NOTIFICATION_WORKER_CONCURRENCY:-10}
+    # on public only for outbound access to email/push providers, no ports published
+    networks:
+      - backend
+      - public
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+networks:
+  backend:
+    internal: true
+  public:
+
+volumes:
+  postgres-data:
+  redis-data:
