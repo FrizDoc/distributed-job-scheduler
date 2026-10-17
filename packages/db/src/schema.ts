@@ -20,7 +20,8 @@ export const jobsTable = pgTable("jobs", {
   created_at: timestamp("created_at").defaultNow(),
   started_at: timestamp("started_at"),
   completed_at: timestamp("completed_at"),
-  jobId: varchar("job_id", { length: 255 }),
+  // workers update status by job_id, without the index every write scans the whole table
+  jobId: varchar("job_id", { length: 255 }).unique(),
   type: varchar({ enum: ["bulk", "single"] }),
   metadata: json(),
 });
