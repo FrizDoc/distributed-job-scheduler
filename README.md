@@ -6,6 +6,20 @@ You send a job to the API (say, "send this email"), it gets saved to Postgres an
 
 Right now there are two kinds of jobs: **email** and **push notification**. The actual sending is stubbed out (the workers just log the payload), so plugging in a real provider is the next step.
 
+
+![Benchmark results](docs/benchmarks.svg)
+
+Load-tested with [k6](https://k6.io) against the Docker Compose stack on a single laptop (Intel i7-1185G7, 4 cores / 8 threads), with the load generator on the same machine.
+
+- **Throughput:** 536 requests/s at the API with 0% errors, and the workers kept pace at 537 jobs/s.
+- **Indexing experiment:** workers update a job's status by `job_id` three times per job. Against a baseline schema without an index on that column, every update scans the whole table. Indexing it took end-to-end p50 latency from 26.4 s to 22.7 ms at 250 jobs/s, and Postgres CPU from about 350% to 67%.
+- **Scaling:** with a 100 ms simulated send per email, worker throughput went from 49 to 98 to 195 jobs/s with 1, 2 and 4 scheduler replicas (3.96×).
+- **Reliability:** all 82,400 jobs across the runs completed; none were lost or left unfinished.
+
+End-to-end latency comes from the `created_at`, `started_at` and `completed_at` columns on the `jobs` table. Each test ran once, and the email processor is still a stub, so outside the scaling test these numbers measure the system's own overhead.
+
+
+
 ## How it works
 
 ```text
@@ -206,16 +220,6 @@ A few things to know:
 
 ## Performance
 
-![Benchmark results](docs/benchmarks.svg)
-
-Load-tested with [k6](https://k6.io) against the Docker Compose stack on a single laptop (Intel i7-1185G7, 4 cores / 8 threads), with the load generator on the same machine.
-
-- **Throughput:** 536 requests/s at the API with 0% errors, and the workers kept pace at 537 jobs/s.
-- **Indexing experiment:** workers update a job's status by `job_id` three times per job. Against a baseline schema without an index on that column, every update scans the whole table. Indexing it took end-to-end p50 latency from 26.4 s to 22.7 ms at 250 jobs/s, and Postgres CPU from about 350% to 67%.
-- **Scaling:** with a 100 ms simulated send per email, worker throughput went from 49 to 98 to 195 jobs/s with 1, 2 and 4 scheduler replicas (3.96×).
-- **Reliability:** all 82,400 jobs across the runs completed; none were lost or left unfinished.
-
-End-to-end latency comes from the `created_at`, `started_at` and `completed_at` columns on the `jobs` table. Each test ran once, and the email processor is still a stub, so outside the scaling test these numbers measure the system's own overhead.
 
 ## Not done yet
 
