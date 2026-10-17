@@ -20,12 +20,11 @@ app.get("/", (req: Request, res: Response) => {
 
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  // Postgres unique violation, e.g. two concurrent registrations with one email.
+  // unique violation
   if (err?.cause?.code === "23505") {
     return res.status(409).json({ message: "Resource already exists!" });
   }
 
-  // Client errors raised by Express itself, e.g. malformed JSON from express.json().
   if (err?.status >= 400 && err?.status < 500) {
     return res.status(err.status).json({ message: err.expose ? err.message : "Bad request" });
   }

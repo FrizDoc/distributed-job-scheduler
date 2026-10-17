@@ -25,7 +25,7 @@ jobRouter.get(
   getJobById,
 );
 jobRouter.patch(
-  "/", isAuthenticated,
+  "/:jobId", isAuthenticated,
   validate({ params: jobIdParamsSchema, body: updateJobSchema }),
   updateJob,
 );

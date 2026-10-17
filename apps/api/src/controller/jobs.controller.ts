@@ -1,104 +1,73 @@
 import { Request, Response } from "express";
 import { and, asc, desc, eq } from "drizzle-orm";
-import { emailQueue, notificationQueue } from "../config/queue/queue";
-import { jobsTable } from "../db/schema";
-import db from "../db";
-import { email } from "zod";
+import { emailQueue, notificationQueue } from "@scheduler/redis/queues";
+import db, { jobsTable } from "@scheduler/db";
 
+type AuthedRequest = Request & { user: { id: number } };
 
+const EDITABLE_STATES = ["waiting", "delayed", "prioritized", "paused"];
 
-
-type JobInfo = {
-  persistentJobId: string | number;
-  queueJobId: string;
-  queueName: "email" | "notification";
+const getQueueForType = (type: unknown) => {
+  switch (type) {
+    case "email":
+      return { queue: emailQueue, jobName: "sendEmail" };
+    case "notification":
+      return { queue: notificationQueue, jobName: "sendNotification" };
+    default:
+      return null;
+  }
 };
 
 export const addJob = async (req: Request, res: Response) => {
   try {
     const jobData = res.locals.validated.body;
-    const userId = (req as Request & { user: { id: number } }).user.id;
+    const userId = (req as AuthedRequest).user.id;
 
-    let jobInfo: JobInfo;
+    const target = getQueueForType(jobData.type);
+    if (!target) {
+      return res.status(400).json({ error: "Invalid job type" });
+    }
 
-    switch (jobData.type) {
-      case "email": {
-        const queueJob = await emailQueue.add(
-          "sendEmail",
-          jobData.payload,
-        );
+    const [savedJob] = await db
+      .insert(jobsTable)
+      .values({
+        name: jobData.name,
+        status: "waiting",
+        userId,
+        metadata: jobData,
+      })
+      .returning({ id: jobsTable.id });
 
-        if (queueJob.id == null) {
-          throw new Error("BullMQ did not return an email job ID");
-        }
+    if (!savedJob) {
+      throw new Error("Failed to persist job");
+    }
 
-        const [savedJob] = await db
-          .insert(jobsTable)
-          .values({
-            name: jobData.name,
-            status: "pending",
-            userId,
-            jobId: queueJob.id,
-            metadata: jobData,
-          })
-          .returning({ id: jobsTable.id });
+    // bullmq doesn't allow purely numeric custom ids
+    const queueJobId = `job-${savedJob.id}`;
 
-        if (!savedJob) {
-          throw new Error("Failed to persist email job");
-        }
+    await db
+      .update(jobsTable)
+      .set({ jobId: queueJobId })
+      .where(eq(jobsTable.id, savedJob.id));
 
-        jobInfo = {
-          persistentJobId: savedJob.id,
-          queueJobId: queueJob.id,
-          queueName: "email",
-        };
-
-        break;
-      }
-
-      case "notification": {
-        const queueJob = await notificationQueue.add(
-          "sendNotification",
-          jobData.payload,
-        );
-
-        if (queueJob.id == null) {
-          throw new Error("BullMQ did not return a notification job ID");
-        }
-
-        const [savedJob] = await db
-          .insert(jobsTable)
-          .values({
-            name: jobData.name,
-            status: "pending",
-            userId,
-            jobId: queueJob.id,
-            metadata: jobData,
-          })
-          .returning({ id: jobsTable.id });
-
-        if (!savedJob) {
-          throw new Error("Failed to persist notification job");
-        }
-
-        jobInfo = {
-          persistentJobId: savedJob.id,
-          queueJobId: queueJob.id,
-          queueName: "notification",
-        };
-
-        break;
-      }
-
-      default:
-        return res.status(400).json({
-          error: "Invalid job type",
-        });
+    try {
+      await target.queue.add(target.jobName, jobData.payload, {
+        jobId: queueJobId,
+        attempts: jobData.attempts,
+        backoff: jobData.backoff,
+      });
+    } catch (error) {
+      await db.delete(jobsTable).where(eq(jobsTable.id, savedJob.id));
+      throw error;
     }
 
     return res.status(201).json({
       message: "Job added successfully",
-      jobInfo,
+      jobInfo: {
+        persistentJobId: savedJob.id,
+        queueJobId,
+        queueName: jobData.type,
+      },
     });
   } catch (error) {
     console.error("Failed to add job:", error);
@@ -109,13 +78,11 @@ export const addJob = async (req: Request, res: Response) => {
   }
 };
 
-
-
 export const getJobById = async (req: Request, res: Response) => {
   try {
     const { jobId } = res.locals.validated.params;
     const { queueName } = res.locals.validated.query;
-    const userId = (req as Request & { user: { id: number } }).user.id;
+    const userId = (req as AuthedRequest).user.id;
 
     const [record] = await db
       .select()
@@ -139,19 +106,21 @@ export const getJobById = async (req: Request, res: Response) => {
         return res.status(400).json({ error: "Invalid queue name" });
     }
 
-    if (!job) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    res.status(200).json({ message: "Job fetched successfully!", job });
+    // job is null once redis has cleared it, the record still has the final status
+    res.status(200).json({
+      message: "Job fetched successfully!",
+      record,
+      job: job ?? null,
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch job" });
   }
 };
+
 export const getJobs = async (req: Request, res: Response) => {
   try {
     const { status, page, limit, order } = res.locals.validated.query;
-    const userId = (req as Request & { user: { id: number } }).user.id;
+    const userId = (req as AuthedRequest).user.id;
 
     const conditions = [eq(jobsTable.userId, userId)];
     if (status) conditions.push(eq(jobsTable.status, status));
@@ -173,81 +142,69 @@ export const getJobs = async (req: Request, res: Response) => {
 
 export const updateJob = async (req: Request, res: Response) => {
   try {
+    const { jobId } = res.locals.validated.params;
     const data = res.locals.validated.body;
-    const userId = (req as Request & {
-      user: { id: number };
-    }).user.id;
+    const userId = (req as AuthedRequest).user.id;
 
-    switch (data.queuename) {
-      case "emails": {
-        const [emailJobDetails] = await db
-          .select({
-            id: jobsTable.id,
-            metadata: jobsTable.metadata,
-            jobId: jobsTable.jobId,
-          })
-          .from(jobsTable)
-          .where(
-            and(
-              eq(jobsTable.jobId, data.jobId),
-              eq(jobsTable.userId, userId),
-            ),
-          )
-          .limit(1);
+    const [record] = await db
+      .select({
+        id: jobsTable.id,
+        metadata: jobsTable.metadata,
+        jobId: jobsTable.jobId,
+      })
+      .from(jobsTable)
+      .where(and(eq(jobsTable.id, jobId), eq(jobsTable.userId, userId)))
+      .limit(1);
 
-        // Verify ownership before accessing the queue.
-        if (!emailJobDetails) {
-          return res.status(404).json({
-            message: "Job not found",
-          });
-        }
+    if (!record || record.jobId == null) {
+      return res.status(404).json({ message: "Job not found" });
+    }
 
-        const emailJob = await emailQueue.getJob(data.jobId);
+    const existingMetadata =
+      typeof record.metadata === "object" &&
+        record.metadata !== null &&
+        !Array.isArray(record.metadata)
+        ? (record.metadata as Record<string, unknown>)
+        : {};
 
-        if (!emailJob || emailJob.id !== emailJobDetails.jobId) {
-          return res.status(404).json({
-            message: "Job not found",
-          });
-        }
+    const target = getQueueForType(existingMetadata.type);
+    if (!target) {
+      return res.status(400).json({ message: "Unsupported job type" });
+    }
 
-        // Update the BullMQ job data.
-        await emailJob.updateData(data.payload);
-
-        // Update metadata without discarding existing properties.
-        const existingMetadata =
-          typeof emailJobDetails.metadata === "object" &&
-            emailJobDetails.metadata !== null &&
-            !Array.isArray(emailJobDetails.metadata)
-            ? emailJobDetails.metadata
-            : {};
-
-        const metadata = {
-          ...existingMetadata,
-          payload: data.payload,
-        };
-
-        await db
-          .update(jobsTable)
-          .set({ metadata })
-          .where(
-            and(
-              eq(jobsTable.id, emailJobDetails.id),
-              eq(jobsTable.userId, userId),
-            ),
-          );
-
-        return res.status(200).json({
-          message: "Job updated successfully",
+    if (data.payload) {
+      const queueJob = await target.queue.getJob(record.jobId);
+      if (!queueJob) {
+        return res.status(409).json({
+          message: "Job payload can't be changed once it has finished",
         });
       }
 
-      default:
-        return res.status(400).json({
-          message: "Unsupported queue name",
+      const state = await queueJob.getState();
+      if (!EDITABLE_STATES.includes(state)) {
+        return res.status(409).json({
+          message: `Job payload can't be changed once it is ${state}`,
         });
+      }
+
+      await queueJob.updateData(data.payload);
     }
+
+    const metadata = {
+      ...existingMetadata,
+      ...(data.name && { name: data.name }),
+      ...(data.payload && { payload: data.payload }),
+    };
+
+    await db
+      .update(jobsTable)
+      .set({ metadata, ...(data.name && { name: data.name }) })
+      .where(and(eq(jobsTable.id, record.id), eq(jobsTable.userId, userId)));
+
+    return res.status(200).json({
+      message: "Job updated successfully",
+    });
   } catch (error) {
-    // Replace with your application's structured logger.
     console.error("Failed to update job:", error);
 
     return res.status(500).json({

@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 
 import { eq } from "drizzle-orm";
-import db from "../db";
-import { usersTable } from "../db/schema";
+import db, { usersTable } from "@scheduler/db";
 import JWT from "jsonwebtoken";
 import bcrypt from "bcrypt";
 

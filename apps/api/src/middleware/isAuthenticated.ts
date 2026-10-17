@@ -4,7 +4,6 @@ import JWT from 'jsonwebtoken';
 
 export const isAuthenticated = (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
-  console.log(authHeader)
   if (!authHeader) {
     return res.status(401).json({ message: 'Authorization header missing' });
   }

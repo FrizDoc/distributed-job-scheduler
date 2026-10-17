@@ -7,7 +7,7 @@ type Schemas = {
   params?: z.ZodType;
 };
 
-// Express 5 makes req.query read-only, so parsed values go on res.locals.validated.
+// req.query is read-only in express 5
 export const validate =
   (schemas: Schemas) => (req: Request, res: Response, next: NextFunction) => {
     const validated: Record<string, unknown> = {};

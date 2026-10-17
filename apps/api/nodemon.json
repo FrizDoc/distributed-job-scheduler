@@ -1,5 +1,5 @@
 {
-  "watch": ["server.ts", "src", "../../packages/validations/src", ".env"],
+  "watch": ["server.ts", "src", "../../packages/validations/src", "../../packages/db/src", "../../packages/redis/src",".env"],
   "ext": "ts,json",
   "ignore": ["node_modules", "dist"],
   "exec": "tsx server.ts",

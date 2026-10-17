@@ -6,27 +6,25 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon",
-    "db:push": "npx drizzle-kit push --config=src/drizzle.config.ts"
+    "db:push": "npx drizzle-kit push --config=../../packages/db/drizzle.config.ts"
   },
   "dependencies": {
+    "@scheduler/db": "*",
+    "@scheduler/redis": "*",
     "@scheduler/validations": "*",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
-    "bullmq": "^6.3.12",
     "dotenv": "^18.0.7",
     "drizzle-orm": "^1.0.0-rc.4",
     "express": "^5.3.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.1",
     "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.5",
-    "@types/pg": "^8.23.1",
-    "drizzle-kit": "^1.0.0-rc.4",
     "nodemon": "^3.1.14",
     "tsx": "^4.23.15"
   },
