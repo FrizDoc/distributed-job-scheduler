@@ -1,12 +1,12 @@
 import { Job, UnrecoverableError } from "bullmq";
-import { QUEUE_NAMES } from "@scheduler/redis";
+import { QUEUE_NAMES, QueueJobData } from "@scheduler/redis";
 import { createWorker } from "./createWorker";
 import { sendNotification } from "../processors/sendNotification";
 
-const processNotificationJob = async (job: Job) => {
+const processNotificationJob = async (job: Job<QueueJobData>, _token?: string, signal?: AbortSignal) => {
   switch (job.name) {
     case "sendNotification":
-      return sendNotification(job);
+      return sendNotification(job, signal);
 
     default:
       throw new UnrecoverableError(`Unknown notification job: ${job.name}`);

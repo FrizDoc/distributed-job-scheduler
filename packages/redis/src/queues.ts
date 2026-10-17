@@ -15,12 +15,15 @@ const defaultJobOptions: DefaultJobOptions = {
   },
 };
 
+// fail fast while redis is down instead of buffering commands until it's back
+const connection = { ...getRedisConnectionOptions(), enableOfflineQueue: false };
+
 export const emailQueue = new Queue(QUEUE_NAMES.EMAILS, {
-  connection: getRedisConnectionOptions(),
+  connection,
   defaultJobOptions,
 });
 
 export const notificationQueue = new Queue(QUEUE_NAMES.PUSH_NOTIFICATIONS, {
-  connection: getRedisConnectionOptions(),
+  connection,
   defaultJobOptions,
 });

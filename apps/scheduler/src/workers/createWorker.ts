@@ -1,11 +1,11 @@
 import { Job, Processor, Worker } from "bullmq";
 import type { JobStatus } from "@scheduler/validations";
-import { getRedisConnectionOptions, QueueName } from "@scheduler/redis";
+import { getRedisConnectionOptions, QueueJobData, QueueName } from "@scheduler/redis";
 import { updateJobStatus } from "../lib/jobStatus";
 
 type CreateWorkerOptions = {
   queueName: QueueName;
-  processor: Processor;
+  processor: Processor<QueueJobData>;
   concurrency: number;
 };
 
@@ -13,7 +13,8 @@ type CreateWorkerOptions = {
 const pendingWrites = new Map<string, Promise<void>>();
 
 const syncStatus = (job: Job, status: JobStatus) => {
-  const jobId = job.id;
+  // runs created by a job scheduler have their own ids, the row is keyed by the scheduler id
+  const jobId = job.repeatJobKey ?? job.id;
   if (jobId == null) return;
 
   const previous = pendingWrites.get(jobId) ?? Promise.resolve();
@@ -32,12 +33,37 @@ const syncStatus = (job: Job, status: JobStatus) => {
 
 export const flushStatusWrites = () => Promise.all(pendingWrites.values());
 
+// promise.race can't stop the processor itself, so it also gets the signal to abort its own work
+const withTimeout =
+  (processor: Processor<QueueJobData>): Processor<QueueJobData> =>
+  async (job, token, signal) => {
+    const timeoutMs = job.data.timeoutMs;
+    if (!timeoutMs) return processor(job, token, signal);
+
+    const controller = new AbortController();
+    signal?.addEventListener("abort", () => controller.abort(signal.reason));
+
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        const error = new Error(`Job timed out after ${timeoutMs}ms`);
+        controller.abort(error);
+        reject(error);
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([processor(job, token, controller.signal), timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
 export const createWorker = ({ queueName, processor, concurrency }: CreateWorkerOptions) => {
-  const worker = new Worker(queueName, processor, {
+  const worker = new Worker(queueName, withTimeout(processor), {
     connection: {
       ...getRedisConnectionOptions(),
       maxRetriesPerRequest: null,
-      retryStrategy: (times: number) => Math.min(times * 500, 5000),
     },
     concurrency,
   });

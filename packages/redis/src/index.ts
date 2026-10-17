@@ -12,18 +12,19 @@ export type RedisConnectionOptions = RedisOptions & {
   retryStrategy: (times: number) => number | null;
 };
 
+// what the api puts on the queue and the workers read back
+export type QueueJobData = {
+  payload: Record<string, unknown>;
+  timeoutMs?: number;
+};
+
 export const getRedisConnectionOptions = (): RedisConnectionOptions => ({
   host: process.env.REDIS_HOST || "localhost",
   port: parseInt(process.env.REDIS_PORT || "7000", 10),
   // password: process.env.REDIS_PASSWORD || undefined,
 
-  retryStrategy(times) {
-    if (times > 10) {
-      return null; // Stop reconnecting after 10 attempts
-    }
-
-    return Math.min(times * 500, 5000);
-  },
+  // never give up, otherwise a long redis outage leaves the process with a dead connection
+  retryStrategy: (times) => Math.min(times * 500, 5000),
 });
 
 export const createRedisConnection = (name: string, overrides: RedisOptions = {}): Redis => {

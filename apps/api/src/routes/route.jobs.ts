@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import { addJob, getJobById, getJobs, updateJob } from "@controller/jobs.controller";
 import { validate } from "@middleware/validate";
 import { isAuthenticated } from "@middleware/isAuthenticated";
@@ -26,9 +26,5 @@ jobRouter.patch(
   validate({ params: jobIdParamsSchema, body: updateJobSchema }),
   updateJob,
 );
-
-jobRouter.post("/add", isAuthenticated, (req: Request, res: Response) => {
-  res.status(201).json({ message: "Job added successfully!" });
-});
 
 export default jobRouter;
