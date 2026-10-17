@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 export const rateLimiter = async (req: Request, res: Response, next: NextFunction) => {
   const key = `ratelimit:${req.ip}`;
   const windowSizeInMilliseconds = 60 * 1000; // 1 minute
-  const maxRequestsPerWindow = 10; // Maximum requests allowed per window
+  const maxRequestsPerWindow = parseInt(process.env.RATE_LIMIT_MAX || "10", 10); // Maximum requests allowed per window
 
   try {
     const count = await redisClient.incr(key);
